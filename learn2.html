@@ -1,0 +1,55 @@
+<!DOCTYPE html> 
+<html> 
+<head> 
+<script src="opencv.js" type="text/javascript"></script>
+<meta charset="utf-8"> 
+<title>Hello OpenCV.js</title> 
+</head> 
+<body> 
+<h2>Hello OpenCV.js</h2> 
+<p id="status">OpenCV.js is loading...</p> 
+<video id="videoInput" width="320" height="240"></video> 
+<canvas id="canvasFrame" width="320" height="240"></canvas> 
+<canvas id="canvasOutput" width="320" height="240"></canvas> 
+<script type="text/javascript">  
+var Module = { 
+ // https://emscripten.org/docs/api_reference/module.html#Module.onRuntimeInitialized 
+    onRuntimeInitialized() { 
+        document.getElementById('status').innerHTML = 'OpenCV.js is ready.'; 
+        let video = document.getElementById("videoInput"); // video is the id of video tag 
+        navigator.mediaDevices.getUserMedia({ video: true, audio: false }) 
+            .then(function(stream) { 
+                video.srcObject = stream; 
+                video.play(); 
+            }) 
+            .catch(function(err) { 
+                console.log("An error occurred! " + err); 
+            }); 
+ 
+        let height = 240; 
+        let width = 320; 
+        let canvasFrame = document.getElementById("canvasFrame"); // canvasFrame is the id of <canvas> 
+        let context = canvasFrame.getContext("2d"); 
+        let src = new cv.Mat(height, width, cv.CV_8UC4); 
+        let dst = new cv.Mat(height, width, cv.CV_8UC1); 
+         
+        const FPS = 30; 
+        function processVideo() { 
+            let begin = Date.now(); 
+            context.drawImage(video, 0, 0, width, height); 
+            src.data.set(context.getImageData(0, 0, width, height).data); 
+            cv.cvtColor(src, dst, cv.COLOR_RGBA2GRAY); 
+            cv.imshow("canvasOutput", dst); // canvasOutput is the id of another <canvas>; 
+            // schedule next one. 
+            let delay = 1000/FPS - (Date.now() - begin); 
+            setTimeout(processVideo, delay); 
+        } 
+         
+        // schedule first one. 
+        setTimeout(processVideo, 0); 
+    } 
+}; 
+</script> 
+<script async src="opencv.js" type="text/javascript"></script> 
+</body> 
+</html>

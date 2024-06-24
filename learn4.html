@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script src="opencv.js" type="text/javascript"></script>
+<meta charset="utf-8">
+<title>Hello OpenCV.js</title>
+</head>
+<body>
+<h2>Hello OpenCV.js</h2>
+<p id="status">OpenCV.js is loading...</p>
+<div>
+    <img id="imageSrc1" alt="No Image" />
+    <div class="caption">imageSrc1 <input type="file" id="fileInput1" name="file" /></div>
+    <canvas id="canvasOutput">
+</div>
+<script type="text/javascript"> 
+var Module = {
+ // https://emscripten.org/docs/api_reference/module.html#Module.onRuntimeInitialized
+    onRuntimeInitialized() {
+        document.getElementById('status').innerHTML = 'OpenCV.js is ready.';
+
+        let imgElement1 = document.getElementById('imageSrc1');
+        let inputElement1 = document.getElementById('fileInput1');
+
+        inputElement1.addEventListener('change', (e) => {
+            imgElement1.src = URL.createObjectURL(e.target.files[0]);
+        }, false);
+
+
+        imgElement1.onload = function() {
+            let src = cv.imread(imgElement1);
+            console.log('image width: ' + src.cols + '\n' +
+            'image height: ' + src.rows + '\n' +
+            'image size: ' + src.size().width + '*' + src.size().height + '\n' +
+            'image depth: ' + src.depth() + '\n' +
+            'image channels ' + src.channels() + '\n' +
+            'image type: ' + src.type() + '\n');
+
+            // === отримання інформації про кольорові компоненти певного пікселя ===
+            // координати пікселя
+            let row = 3, col = 4;
+            if (src.isContinuous()) {
+                let R = src.data[row * src.cols * src.channels() + col * src.channels()];
+                let G = src.data[row * src.cols * src.channels() + col * src.channels() + 1];
+                let B = src.data[row * src.cols * src.channels() + col * src.channels() + 2];
+                let A = src.data[row * src.cols * src.channels() + col * src.channels() + 3];
+                
+                console.log(R);
+                console.log(G);
+                console.log(B);
+                console.log(A);
+            }
+
+            let dst = new cv.Mat();
+            // You can try more different parameters
+            let rect = new cv.Rect(100, 100, 200, 200);
+            dst = src.roi(rect);
+            cv.imshow('canvasOutput', dst);
+
+            let rgbaPlanes = new cv.MatVector();
+            // Split the Mat
+            cv.split(src, rgbaPlanes);
+            // Get R channel
+            let R = rgbaPlanes.get(0);
+            // console.log(R);
+            // Merge all channels
+            cv.merge(rgbaPlanes, src);
+            rgbaPlanes.delete(); R.delete();
+            
+            src.delete();
+            dst.delete();
+        };
+    }
+};
+</script>
+<script async src="opencv.js" type="text/javascript"></script>
+</body>
+</html>

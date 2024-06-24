@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script src="opencv.js" type="text/javascript"></script>
+<meta charset="utf-8">
+<title>Hello OpenCV.js</title>
+</head>
+<body>
+<h2>Hello OpenCV.js</h2>
+<p id="status">OpenCV.js is loading...</p>
+<div>
+    <img id="imageSrc1" alt="No Image" />
+    <img id="imageSrc2" alt="No Image" />
+    <div class="caption">imageSrc1 <input type="file" id="fileInput1" name="file" /></div>
+    <div class="caption">imageSrc2 <input type="file" id="fileInput2" name="file" /></div>
+
+    <canvas id="canvasInput1" width="320" height="320"></canvas>
+    <canvas id="canvasInput2" width="320" height="320"></canvas>
+    <input type="range" id="trackbar" value="50" min="0" max="100" step="1">
+    <canvas id="canvasOutput" width="320" height="320"></canvas>
+</div>
+<script type="text/javascript"> 
+var Module = {
+ // https://emscripten.org/docs/api_reference/module.html#Module.onRuntimeInitialized
+    onRuntimeInitialized() {
+        document.getElementById('status').innerHTML = 'OpenCV.js is ready.';
+
+        let imgElement1 = document.getElementById('imageSrc1');
+        let imgElement2 = document.getElementById('imageSrc2');
+        let inputElement1 = document.getElementById('fileInput1');
+        let inputElement2 = document.getElementById('fileInput2');
+
+        inputElement1.addEventListener('change', (e) => {
+            imgElement1.src = URL.createObjectURL(e.target.files[0]);
+        }, false);
+
+        inputElement2.addEventListener('change', (e) => {
+            imgElement2.src = URL.createObjectURL(e.target.files[0]);
+        }, false);
+
+        imgElement1.onload = function() {
+            let mat = cv.imread(imgElement1);
+            cv.imshow('canvasInput1', mat);
+            mat.delete();
+        };
+        imgElement2.onload = function() {
+            let mat = cv.imread(imgElement2);
+            cv.imshow('canvasInput2', mat);
+            mat.delete();
+        };
+        let trackbar = document.getElementById('trackbar');
+        trackbar.addEventListener('change', (e) => {
+            let trackbar = document.getElementById('trackbar');
+            let alpha = trackbar.value/trackbar.max;
+            let beta = ( 1.0 - alpha );
+            let src1 = cv.imread('canvasInput1');
+            let src2 = cv.imread('canvasInput2');
+            let dst = new cv.Mat();
+            cv.addWeighted( src1, alpha, src2, beta, 0.0, dst, -1);
+            cv.imshow('canvasOutput', dst);
+            dst.delete();
+            src1.delete();
+            src2.delete();
+        }, false);
+    }
+};
+</script>
+<script async src="opencv.js" type="text/javascript"></script>
+</body>
+</html>
